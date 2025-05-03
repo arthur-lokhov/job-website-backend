@@ -10,9 +10,9 @@ type Vacancy struct {
 	Location        any // need FK
 	Info            string
 	ApplicationForm any // need JSONB
-	isActive        bool
+	IsActive        bool
 	Important       bool
-	priority        int
-	createdAt       any // need time
-	updatedAt       any // need time
+	Priority        int
+	CreatedAt       any // need time
+	UpdatedAt       any // need time
 }
