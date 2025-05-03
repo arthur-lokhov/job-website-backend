@@ -7,11 +7,17 @@ import (
 )
 
 type Vacancy struct {
-	ID          uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
-	Title       string
-	Description string
-	CompanyName string
-	Location    string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
+	Name      string
+	Info      string
+	isActive  bool
+	important bool
+	priority  int
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	// Department string
+	// Level string
+	// Location  string
+	// ApplicationForm json
 }
