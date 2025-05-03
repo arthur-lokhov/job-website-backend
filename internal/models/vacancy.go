@@ -10,9 +10,9 @@ type Vacancy struct {
 	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey"`
 	Name      string
 	Info      string
-	isActive  bool
-	important bool
-	priority  int
+	IsActive  bool
+	Important bool
+	Priority  int
 	CreatedAt time.Time
 	UpdatedAt time.Time
 

@@ -25,6 +25,8 @@ func Init(cfg *config.Config) {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
+	DB.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
+
 	err = DB.AutoMigrate(&models.Vacancy{})
 	if err != nil {
 		log.Fatalf("migration failed: %v", err)
