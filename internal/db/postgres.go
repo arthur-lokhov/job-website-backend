@@ -25,9 +25,25 @@ func Init(cfg *config.Config) {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
+	// TODO: Убрать SQL код
 	DB.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
 
-	err = DB.AutoMigrate(&models.Vacancy{})
+	DB.Exec(`
+	DO $$
+	BEGIN
+		IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'application_status') THEN
+			CREATE TYPE application_status AS ENUM ('NEW', 'IN_REVIEW', 'ACCEPTED', 'REJECTED');
+		END IF;
+	END$$;
+`)
+
+	err = DB.AutoMigrate(
+		&models.Department{},
+		&models.Level{},
+		&models.Location{},
+		&models.Vacancy{},
+		&models.Application{},
+	)
 	if err != nil {
 		log.Fatalf("migration failed: %v", err)
 	}
