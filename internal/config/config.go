@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -11,25 +12,29 @@ import (
 
 // Config structure for storing all settings
 type Config struct {
-	App struct {
-		Name  string `mapstructure:"APP_NAME"`   // The name of the application.
-		IsDev bool   `mapstructure:"APP_IS_DEV"` // The current environment(IsProd or IsDev).
-		Port  string `mapstructure:"APP_PORT"`   // The port on which the application will run.
-	}
+	Server   ServerConfig   `mapstructure:"server"`
+	Database DatabaseConfig `mapstructure:"database"`
+	Auth     AuthConfig     `mapstructure:"auth"`
+}
 
-	Database struct {
-		URL      string `mapstructure:"DB_URL"`      // The database connection URL (used for convenience or overriding other parameters).
-		User     string `mapstructure:"DB_USER"`     // The username for the database connection.
-		Password string `mapstructure:"DB_PASSWORD"` // The password for the database connection.
-		Name     string `mapstructure:"DB_NAME"`     // The name of the database to connect to.
-		Port     int    `mapstructure:"DB_PORT"`     // The port number of the database server.
-		Host     string `mapstructure:"DB_HOST"`     // The hostname or IP address of the database server.
-		SSLMode  string `mapstructure:"DB_SSLMODE"`  // The SSL mode for the database connection (e.g., disable, require, verify-full).
-	}
+type ServerConfig struct {
+	Port         int           `mapstructure:"port"`
+	ReadTimeout  time.Duration `mapstructure:"read_timeout"`
+	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+}
 
-	Logger struct {
-		Level string `mapstructure:"LOG_LEVEL"` // The logging level (e.g., debug, info, warn, error, fatal).
-	}
+type DatabaseConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	User     string `mapstructure:"user"`
+	Password string `mapstructure:"password"`
+	DBName   string `mapstructure:"dbname"`
+	SSLMode  string `mapstructure:"sslmode"`
+}
+
+type AuthConfig struct {
+	PublicKeyURL string `mapstructure:"public_key_url"`
+	TokenTTL     int    `mapstructure:"token_ttl"`
 }
 
 func LoadConfig(path string, logger *zap.Logger) (*Config, error) {
@@ -72,4 +77,15 @@ func setDefaults() {
 
 func (c *Config) IsProduction() bool {
 	return !c.App.IsDev
+}
+
+func (c *Config) GetDSN() string {
+	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		c.Database.Host,
+		c.Database.Port,
+		c.Database.User,
+		c.Database.Password,
+		c.Database.DBName,
+		c.Database.SSLMode,
+	)
 }

@@ -1,0 +1,31 @@
+server:
+  port: 8080
+  readTimeout: 5
+  writeTimeout: 10
+  idleTimeout: 120
+
+database:
+  url: "postgres://postgres:postgres@localhost:5432/job_website?sslmode=disable"
+
+jwt:
+  publicKeyPath: "config/public.pem"
+  blacklistTTL: 24 # hours
+
+cors:
+  allowedOrigins:
+    - "*"
+  allowedMethods:
+    - GET
+    - POST
+    - PUT
+    - DELETE
+    - OPTIONS
+  allowedHeaders:
+    - Accept
+    - Authorization
+    - Content-Type
+    - X-CSRF-Token
+  exposedHeaders:
+    - Link
+  allowCredentials: true
+  maxAge: 300 

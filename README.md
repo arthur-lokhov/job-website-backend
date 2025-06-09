@@ -1,93 +1,136 @@
-# Job-website-backend
+# Job Website Backend
 
+A Go-based backend service for managing job vacancies and applications.
 
+## Features
 
-## Getting started
+- RESTful API for managing job vacancies and applications
+- JWT-based authentication with public key validation
+- Role-based access control
+- PostgreSQL database with migrations
+- CORS support
+- Graceful shutdown
+- Configuration management with Viper
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Prerequisites
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Go 1.21 or later
+- PostgreSQL 12 or later
+- Make (optional, for using Makefile commands)
 
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Project Structure
 
 ```
-cd existing_repo
-git remote add origin https://git.cyberzone.dev/project-vacancy-website/job-website-backend.git
-git branch -M main
-git push -uf origin main
+.
+├── cmd/
+│   └── api/              # Application entry point
+├── config/              # Configuration files
+├── internal/
+│   ├── handlers/        # HTTP handlers
+│   ├── middleware/      # HTTP middleware
+│   ├── models/          # Data models
+│   ├── repositories/    # Database repositories
+│   ├── router/          # HTTP router
+│   └── services/        # Business logic
+├── migrations/          # Database migrations
+├── config.yaml         # Default configuration
+├── go.mod             # Go module file
+├── go.sum             # Go module checksum
+└── README.md          # This file
 ```
 
-## Integrate with your tools
+## Setup
 
-- [ ] [Set up project integrations](https://git.cyberzone.dev/project-vacancy-website/job-website-backend/-/settings/integrations)
+1. Clone the repository:
+   ```bash
+   git clone https://git.cyberzone.dev/project-vacancy-website/job-website-backend.git
+   cd job-website-backend
+   ```
 
-## Collaborate with your team
+2. Install dependencies:
+   ```bash
+   go mod download
+   ```
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+3. Create a PostgreSQL database:
+   ```bash
+   createdb job_website
+   ```
 
-## Test and Deploy
+4. Run database migrations:
+   ```bash
+   go run cmd/migrate/main.go
+   ```
 
-Use the built-in continuous integration in GitLab.
+5. Copy the default configuration and modify as needed:
+   ```bash
+   cp config/config.yaml.example config/config.yaml
+   ```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+6. Place your JWT public key in `config/public.pem`
 
-***
+## Running the Application
 
-# Editing this README
+```bash
+go run cmd/api/main.go
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+The server will start on port 8080 by default. You can change this in the configuration file.
 
-## Suggestions for a good README
+## API Endpoints
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+### Public Endpoints
 
-## Name
-Choose a self-explaining name for your project.
+- `GET /api/v1/vacancies` - List all active vacancies
+- `GET /api/v1/vacancies/{id}` - Get vacancy details
+- `GET /api/v1/vacancies/{id}/form` - Get vacancy application form
+- `POST /api/v1/applications` - Submit a job application
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+### Admin Endpoints (Requires Authentication)
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+- `GET /api/v1/admin/vacancies` - List all vacancies
+- `POST /api/v1/admin/vacancies` - Create a new vacancy
+- `PUT /api/v1/admin/vacancies/{id}` - Update a vacancy
+- `DELETE /api/v1/admin/vacancies/{id}` - Delete a vacancy
+- `GET /api/v1/admin/applications` - List all applications
+- `PUT /api/v1/admin/applications/{id}` - Update application status
+- `DELETE /api/v1/admin/applications/{id}` - Delete an application
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## Authentication
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+The API uses JWT tokens for authentication. Admin endpoints require a valid JWT token with the "admin" permission in the Authorization header:
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```
+Authorization: Bearer <token>
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+## Configuration
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+The application can be configured using the `config.yaml` file or environment variables. The following settings are available:
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+- `server.port` - HTTP server port
+- `server.readTimeout` - Read timeout in seconds
+- `server.writeTimeout` - Write timeout in seconds
+- `server.idleTimeout` - Idle timeout in seconds
+- `database.url` - PostgreSQL connection URL
+- `jwt.publicKeyPath` - Path to JWT public key
+- `jwt.blacklistTTL` - Token blacklist TTL in hours
+- `cors.*` - CORS configuration
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+## Development
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+### Running Tests
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+```bash
+go test ./...
+```
+
+### Running Linter
+
+```bash
+golangci-lint run
+```
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This project is licensed under the MIT License - see the LICENSE file for details.
