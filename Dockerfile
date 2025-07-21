@@ -1,45 +1,17 @@
-# Build stage
-FROM golang:1.23-alpine AS builder
-
+FROM golang:1.24-alpine AS builder
 WORKDIR /app
-
-# Install build dependencies
-RUN apk add --no-cache git
-
-# Copy go mod and sum files
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
-
-# Copy source code
 COPY . .
+RUN go build -o job-website-backend ./cmd/api
 
-# Build the application and migration binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o /app/bin/api ./cmd/api && \
-    CGO_ENABLED=0 GOOS=linux go build -o /app/bin/migrate ./cmd/migrate
-
-# Final stage
-FROM alpine:3.19
-
+FROM alpine:latest
 WORKDIR /app
-
-# Install runtime dependencies
-RUN apk add --no-cache ca-certificates tzdata
-
-# Copy the binaries from builder
-COPY --from=builder /app/bin/api /app/api
-COPY --from=builder /app/bin/migrate /app/migrate
-
-# Copy configuration files
-COPY config/config.yaml /app/config/config.yaml
-COPY config/public.pem /app/config/public.pem
-
-# Copy migrations
-COPY migrations /app/migrations
-
-# Expose the application port
+RUN adduser -D appuser
+COPY --from=builder /app/job-website-backend .
+COPY config ./config
+COPY migrations ./migrations
+USER appuser
 EXPOSE 8080
-
-# Run the application
-CMD ["/app/api"] 
+HEALTHCHECK --interval=30s --timeout=3s CMD wget --spider -q http://localhost:8080/ || exit 1
+CMD ["./job-website-backend"] 

@@ -1,15 +1,11 @@
-# make commands
-migrate-up:
-	@echo "Applying migrations..."
-	goose up
+run:
+	go run ./cmd/api/main.go
 
-migrate-down:
-	@echo "Reverting migrations..."
-	goose down
+migrate:
+	go run ./cmd/migrate/main.go
 
-migrate-status:
-	@echo "Migration status:"
-	goose status
+docker-build:
+	docker build -t job-website-backend .
 
-tidy:
-	go mod tidy
+docker-up:
+	docker compose up --build

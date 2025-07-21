@@ -1,8 +1,0 @@
-# configs
-configs/*.yml
-!configs/*.example.yml
-.env
-!.example.env
-
-# logs
-logs

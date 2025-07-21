@@ -2,104 +2,171 @@ package middleware
 
 import (
 	"context"
+	"crypto/rsa"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"strings"
+	"sync"
+	"time"
 
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
-
-	"git.cyberzone.dev/project-vacancy-website/job-website-backend/internal/services"
+	"github.com/golang-jwt/jwt/v4"
+	"crypto/ed25519"
+	"crypto/x509"
+	"encoding/pem"
 )
 
-type contextKey string
-
-const (
-	UserIDKey      contextKey = "user_id"
-	UserEmailKey   contextKey = "user_email"
-	UserRolesKey   contextKey = "user_roles"
-	UserTokenKey   contextKey = "user_token"
-	UserClaimsKey  contextKey = "user_claims"
+var (
+	publicKey     interface{} // может быть *rsa.PublicKey или ed25519.PublicKey
+	publicKeyOnce sync.Once
 )
 
-func Auth(authService *services.AuthService) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			tokenString, err := authService.ExtractTokenFromHeader(r.Header.Get("Authorization"))
-			if err != nil {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
+func getPublicKey() (interface{}, error) {
+	var err error
+	publicKeyOnce.Do(func() {
+		keyUrl := os.Getenv("AUTH_PUBLIC_KEY_URL")
+		if keyUrl == "" {
+			keyUrl = os.Getenv("AUTH_URL") + "/v1/auth/publickey"
+		}
+		if keyUrl == "" {
+			keyUrl = "https://authservice.cyberzone.dev/v1/auth/publickey"
+		}
+		resp, e := http.Get(keyUrl)
+		if e != nil {
+			err = e
+			return
+		}
+		defer resp.Body.Close()
+		pemBytes, e := ioutil.ReadAll(resp.Body)
+		if e != nil {
+			err = e
+			return
+		}
+		block, _ := pem.Decode(pemBytes)
+		if block == nil {
+			err = errors.New("invalid PEM block")
+			return
+		}
+		pub, e := x509.ParsePKIXPublicKey(block.Bytes)
+		if e != nil {
+			err = e
+			return
+		}
+		publicKey = pub
+	})
+	return publicKey, err
+}
 
-			token, err := authService.ValidateToken(r.Context(), tokenString)
-			if err != nil {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
+func AuthRequired(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tokenStr := r.Header.Get("Authorization")
+		if tokenStr == "" || !strings.HasPrefix(tokenStr, "Bearer ") {
+			unauthorized(w)
+			return
+		}
+		tokenStr = strings.TrimPrefix(tokenStr, "Bearer ")
+		pubKey, err := getPublicKey()
+		if err != nil {
+			serverError(w)
+			return
+		}
+		claims := jwt.MapClaims{}
+		var token *jwt.Token
+		if pk, ok := pubKey.(*rsa.PublicKey); ok {
+			token, err = jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+					return nil, fmt.Errorf("unexpected signing method: %v", token.Method.Alg())
+				}
+				return pk, nil
+			})
+		} else if pk, ok := pubKey.(ed25519.PublicKey); ok {
+			token, err = jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+				if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
+					return nil, fmt.Errorf("unexpected signing method: %v", token.Method.Alg())
+				}
+				return pk, nil
+			})
+		} else {
+			serverError(w)
+			return
+		}
+		if err != nil || !token.Valid {
+			unauthorized(w)
+			return
+		}
+		// Проверка exp, nbf
+		now := time.Now().Unix()
+		if !checkTimeClaim(claims, "exp", now, true) || !checkTimeClaim(claims, "nbf", now, false) {
+			unauthorized(w)
+			return
+		}
+		// Проверка blacklist через Authservice
+		if isBlacklisted(tokenStr) {
+			unauthorized(w)
+			return
+		}
+		// Получение и кэширование прав пользователя
+		uid, _ := claims["uid"].(string)
+		var perms []string
+		if uid != "" {
+			perms, _ = GetUserPermissions(uid)
+		}
+		ctx := context.WithValue(r.Context(), "user", claims)
+		ctx = context.WithValue(ctx, "permissions", perms)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
-			claims, ok := token.Claims.(jwt.MapClaims)
-			if !ok {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
-
-			// Extract user information from claims
-			userID, _ := uuid.Parse(claims["sub"].(string))
-			email := claims["email"].(string)
-			roles := claims["roles"].([]interface{})
-
-			// Create a new context with user information
-			ctx := context.WithValue(r.Context(), UserIDKey, userID)
-			ctx = context.WithValue(ctx, UserEmailKey, email)
-			ctx = context.WithValue(ctx, UserRolesKey, roles)
-			ctx = context.WithValue(ctx, UserTokenKey, token)
-			ctx = context.WithValue(ctx, UserClaimsKey, claims)
-
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
+func checkTimeClaim(claims jwt.MapClaims, key string, now int64, mustBeFuture bool) bool {
+	v, ok := claims[key]
+	if !ok {
+		return false
 	}
-}
-
-func RequirePermission(permission string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			token, ok := r.Context().Value(UserTokenKey).(*jwt.Token)
-			if !ok {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
-
-			authService := r.Context().Value("auth_service").(*services.AuthService)
-			if err := authService.CheckPermission(r.Context(), token, permission); err != nil {
-				http.Error(w, "Forbidden", http.StatusForbidden)
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		})
+	var t int64
+	switch val := v.(type) {
+	case float64:
+		t = int64(val)
+	case int64:
+		t = val
+	default:
+		return false
 	}
+	if mustBeFuture {
+		return now < t
+	}
+	return now >= t
 }
 
-// Helper functions to get user information from context
-func GetUserID(ctx context.Context) (uuid.UUID, bool) {
-	userID, ok := ctx.Value(UserIDKey).(uuid.UUID)
-	return userID, ok
+func isBlacklisted(token string) bool {
+	url := os.Getenv("AUTH_URL") + "/v1/auth/expired?token=" + token
+	if url == "/v1/auth/expired?token=" {
+		url = "https://authservice.cyberzone.dev/v1/auth/expired?token=" + token
+	}
+	resp, err := http.Get(url)
+	if err != nil {
+		return false // fail open
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == 200 {
+		var res struct {
+			Expired bool `json:"expired"`
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		return res.Expired
+	}
+	return false
 }
 
-func GetUserEmail(ctx context.Context) (string, bool) {
-	email, ok := ctx.Value(UserEmailKey).(string)
-	return email, ok
+func unauthorized(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusUnauthorized)
+	json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
 }
 
-func GetUserRoles(ctx context.Context) ([]interface{}, bool) {
-	roles, ok := ctx.Value(UserRolesKey).([]interface{})
-	return roles, ok
+func serverError(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusInternalServerError)
+	json.NewEncoder(w).Encode(map[string]string{"error": "Internal server error"})
 }
 
-func GetUserToken(ctx context.Context) (*jwt.Token, bool) {
-	token, ok := ctx.Value(UserTokenKey).(*jwt.Token)
-	return token, ok
-}
-
-func GetUserClaims(ctx context.Context) (jwt.MapClaims, bool) {
-	claims, ok := ctx.Value(UserClaimsKey).(jwt.MapClaims)
-	return claims, ok
-} 
