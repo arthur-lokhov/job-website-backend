@@ -1,17 +1,39 @@
-FROM golang:1.24-alpine AS builder
+# ===============================================================
+# Стадия 1: Сборка приложения
+# ===============================================================
+FROM golang:1.22-alpine AS builder
+
 WORKDIR /app
+
 COPY go.mod go.sum ./
 RUN go mod download
-COPY . .
-RUN go build -o job-website-backend ./cmd/api
 
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/server ./cmd/api
+
+# ===============================================================
+# Стадия 2: Создание минимального исполняемого образа
+# ===============================================================
 FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates tini
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 WORKDIR /app
-RUN adduser -D appuser
-COPY --from=builder /app/job-website-backend .
+
+COPY --from=builder /app/server .
 COPY config ./config
 COPY migrations ./migrations
+
+RUN chown -R appuser:appgroup /app
+
 USER appuser
+
 EXPOSE 8080
-HEALTHCHECK --interval=30s --timeout=3s CMD wget --spider -q http://localhost:8080/ || exit 1
-CMD ["./job-website-backend"] 
+
+ENTRYPOINT ["/sbin/tini", "--", "./server"]
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost:8080/healthz || exit 1

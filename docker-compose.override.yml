@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  db:
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - ./scripts/init_dev.sql:/docker-entrypoint-initdb.d/init.sql # For tests only
+
+  cache:
+    ports:
+      - "${VALKEY_PORT:-6379}:6379"
+
+  app:
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
