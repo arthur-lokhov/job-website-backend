@@ -1,0 +1,52 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-jobdb}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-jobdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - backend
+  cache:
+    image: valkey/valkey:7.2-alpine
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - backend
+  app:
+    image: job-website-backend:latest
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    environment:
+      # Важно: собираем DB_URL, как того ожидает Go приложение
+      - DB_URL=postgres://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-jobdb}?sslmode=disable
+      - AUTH_URL=${AUTH_URL:-https://authservice.cyberzone.dev}
+      - AUTH_API_TOKEN=${AUTH_API_TOKEN:-your_auth_api_token_here} # Add this line
+      # Передаем REDIS_URL напрямую
+      - REDIS_URL=${REDIS_URL:-redis://cache:6379/0}
+      - HTTP_SERVER_PORT=${HTTP_SERVER_PORT:-:8080}
+      - HTTP_SERVER_TIMEOUT=${HTTP_SERVER_TIMEOUT:-4s}
+      - HTTP_SERVER_SHUTDOWN_TIMEOUT=${HTTP_SERVER_SHUTDOWN_TIMEOUT:-5s}
+    restart: unless-stopped
+    networks:
+      - backend
+volumes:
+  pgdata:
+networks:
+  backend:
+    driver: bridge

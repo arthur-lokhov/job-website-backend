@@ -1,0 +1,27 @@
+stages:
+  - build-and-push
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "" # Disable TLS for Docker in Docker
+  APP_IMAGE_NAME: job-website-backend
+  HARBOR_REGISTRY_URL: your-harbor-registry.example.com # Replace with your Harbor registry URL
+  HARBOR_USERNAME: your-harbor-username # Replace with your Harbor username
+  HARBOR_PASSWORD: your-harbor-password # Replace with your Harbor password
+
+build-and-push:
+  stage: build-and-push
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - echo "Logging in to Harbor registry..."
+    - docker login $HARBOR_REGISTRY_URL -u $HARBOR_USERNAME -p $HARBOR_PASSWORD
+    - echo "Building Docker image..."
+    - docker build -t $HARBOR_REGISTRY_URL/$APP_IMAGE_NAME:$CI_COMMIT_SHORT_SHA .
+    - docker tag $HARBOR_REGISTRY_URL/$APP_IMAGE_NAME:$CI_COMMIT_SHORT_SHA $HARBOR_REGISTRY_URL/$APP_IMAGE_NAME:latest
+    - echo "Pushing Docker image to Harbor registry..."
+    - docker push $HARBOR_REGISTRY_URL/$APP_IMAGE_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $HARBOR_REGISTRY_URL/$APP_IMAGE_NAME:latest
+  only:
+    - main # Only run on pushes to the main branch

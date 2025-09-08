@@ -1,0 +1,578 @@
+basePath: /api/v1
+definitions:
+  v1.AdminVacancyItem:
+    properties:
+      applicationForm:
+        $ref: '#/definitions/v1.ApplicationFormDTO'
+      createdAt:
+        type: string
+      department:
+        $ref: '#/definitions/v1.DepartmentDTO'
+      id:
+        type: string
+      important:
+        type: boolean
+      info:
+        type: string
+      isActive:
+        type: boolean
+      level:
+        $ref: '#/definitions/v1.LevelDTO'
+      location:
+        $ref: '#/definitions/v1.LocationDTO'
+      name:
+        type: string
+      priority:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  v1.ApplicationFormDTO:
+    properties:
+      formSchema:
+        additionalProperties: true
+        type: object
+    type: object
+  v1.ApplicationItem:
+    properties:
+      answeredAt:
+        type: string
+      answers:
+        additionalProperties: true
+        type: object
+      createdAt:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      updatedAt:
+        type: string
+      vacancyId:
+        type: string
+      vacancyName:
+        type: string
+    type: object
+  v1.ApplicationStatusUpdate:
+    properties:
+      status:
+        enum:
+        - PENDING
+        - VIEWED
+        - INPROGRESS
+        - APPROVED
+        - REJECTED
+        type: string
+    required:
+    - status
+    type: object
+  v1.ApplicationSubmitRequest:
+    properties:
+      answers:
+        additionalProperties: true
+        type: object
+      vacancyId:
+        type: string
+    required:
+    - answers
+    - vacancyId
+    type: object
+  v1.CreatedResponse:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      success:
+        type: boolean
+    type: object
+  v1.DepartmentDTO:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  v1.DepartmentResponse:
+    properties:
+      label:
+        type: string
+      value:
+        type: string
+    type: object
+  v1.LevelDTO:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  v1.LevelResponse:
+    properties:
+      label:
+        type: string
+      value:
+        type: string
+    type: object
+  v1.LocationDTO:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  v1.LocationResponse:
+    properties:
+      label:
+        type: string
+      value:
+        type: string
+    type: object
+  v1.PublicVacancyDetails:
+    properties:
+      department:
+        $ref: '#/definitions/v1.DepartmentDTO'
+      id:
+        type: string
+      important:
+        type: boolean
+      info:
+        type: string
+      level:
+        $ref: '#/definitions/v1.LevelDTO'
+      location:
+        $ref: '#/definitions/v1.LocationDTO'
+      logoUrl:
+        type: string
+      name:
+        type: string
+      photoUrl:
+        type: string
+      priority:
+        type: integer
+    type: object
+  v1.PublicVacancyItem:
+    properties:
+      department:
+        $ref: '#/definitions/v1.DepartmentDTO'
+      id:
+        type: string
+      important:
+        type: boolean
+      level:
+        $ref: '#/definitions/v1.LevelDTO'
+      location:
+        $ref: '#/definitions/v1.LocationDTO'
+      logoUrl:
+        type: string
+      name:
+        type: string
+      priority:
+        type: integer
+    type: object
+  v1.SuccessResponse:
+    properties:
+      id:
+        type: string
+      success:
+        type: boolean
+    type: object
+  v1.VacancyCreateRequest:
+    properties:
+      applicationForm:
+        $ref: '#/definitions/v1.ApplicationFormDTO'
+      departmentId:
+        type: string
+      important:
+        type: boolean
+      info:
+        minLength: 10
+        type: string
+      isActive:
+        type: boolean
+      levelId:
+        type: string
+      locationId:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      priority:
+        minimum: 0
+        type: integer
+    required:
+    - applicationForm
+    - departmentId
+    - info
+    - levelId
+    - locationId
+    - name
+    type: object
+  v1.VacancyUpdateRequest:
+    properties:
+      applicationForm:
+        $ref: '#/definitions/v1.ApplicationFormDTO'
+      departmentId:
+        type: string
+      important:
+        type: boolean
+      info:
+        minLength: 10
+        type: string
+      isActive:
+        type: boolean
+      levelId:
+        type: string
+      locationId:
+        type: string
+      name:
+        maxLength: 100
+        minLength: 3
+        type: string
+      priority:
+        minimum: 0
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server for a job website.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Job Website API
+  version: "1.0"
+paths:
+  /admin/applications:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all applications
+      parameters:
+      - description: filter by status
+        in: query
+        name: status
+        type: string
+      - description: filter by vacancy ID
+        in: query
+        name: vacancyId
+        type: string
+      - description: search by applicant's full name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/v1.ApplicationItem'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of all applications
+      tags:
+      - admin
+  /admin/applications/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an application
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKeyAuth: []
+      summary: Delete an application
+      tags:
+      - admin
+    patch:
+      consumes:
+      - application/json
+      description: Update an application
+      parameters:
+      - description: Application ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Application status
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/v1.ApplicationStatusUpdate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.SuccessResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update an application
+      tags:
+      - admin
+  /admin/vacancies:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all vacancies
+      parameters:
+      - description: filter by active vacancies
+        in: query
+        name: isActive
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/v1.AdminVacancyItem'
+            type: array
+      security:
+      - ApiKeyAuth: []
+      summary: Get a list of all vacancies
+      tags:
+      - admin
+    post:
+      consumes:
+      - application/json
+      description: Create a new vacancy
+      parameters:
+      - description: Vacancy data
+        in: body
+        name: vacancy
+        required: true
+        schema:
+          $ref: '#/definitions/v1.VacancyCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.CreatedResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new vacancy
+      tags:
+      - admin
+  /admin/vacancies/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a vacancy
+      parameters:
+      - description: Vacancy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a vacancy
+      tags:
+      - admin
+    patch:
+      consumes:
+      - application/json
+      description: Update a vacancy
+      parameters:
+      - description: Vacancy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Vacancy data
+        in: body
+        name: vacancy
+        required: true
+        schema:
+          $ref: '#/definitions/v1.VacancyUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.SuccessResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a vacancy
+      tags:
+      - admin
+  /applications:
+    post:
+      consumes:
+      - application/json
+      description: Create a new application
+      parameters:
+      - description: Application data
+        in: body
+        name: application
+        required: true
+        schema:
+          $ref: '#/definitions/v1.ApplicationSubmitRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.SuccessResponse'
+      summary: Create a new application
+      tags:
+      - applications
+  /departments:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of departments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/v1.DepartmentResponse'
+            type: array
+      summary: Get a list of departments
+      tags:
+      - departments
+  /levels:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of levels
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/v1.LevelResponse'
+            type: array
+      summary: Get a list of levels
+      tags:
+      - levels
+  /locations:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of locations
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/v1.LocationResponse'
+            type: array
+      summary: Get a list of locations
+      tags:
+      - locations
+  /vacancies:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of active vacancies
+      parameters:
+      - description: filter by important vacancies
+        in: query
+        name: important
+        type: boolean
+      - description: sort by priority (asc/desc)
+        in: query
+        name: sort
+        type: string
+      - description: search by vacancy name
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/v1.PublicVacancyItem'
+            type: array
+      summary: Get a list of active vacancies
+      tags:
+      - vacancies
+  /vacancies/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get a vacancy by ID
+      parameters:
+      - description: Vacancy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.PublicVacancyDetails'
+      summary: Get a vacancy by ID
+      tags:
+      - vacancies
+  /vacancies/{id}/form:
+    get:
+      consumes:
+      - application/json
+      description: Get the application form for a vacancy
+      parameters:
+      - description: Vacancy ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.ApplicationFormDTO'
+      summary: Get the application form for a vacancy
+      tags:
+      - vacancies
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
