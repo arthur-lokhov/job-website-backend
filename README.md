@@ -1,92 +1,92 @@
-# Job Website Backend
+# Backend для сайта с вакансиями
 
-This is the backend for a job website, built with Go. It follows a clean architecture, separating concerns into Handlers, Services, Repositories, and Models. The application leverages Docker and Docker Compose for containerization, PostgreSQL as its primary database, and Valkey (a Redis fork) for caching.
+Это бэкенд для сайта с вакансиями, разработанный на Go. Он следует принципам чистой архитектуры, разделяя логику на обработчики (Handlers), сервисы (Services), репозитории (Repositories) и модели (Models). Приложение использует Docker и Docker Compose для контейнеризации, PostgreSQL в качестве основной базы данных и Valkey (форк Redis) для кэширования.
 
-## Building and Running
+## Сборка и запуск
 
-To build and run the application, you need Docker and Docker Compose installed on your system.
+Для сборки и запуска приложения вам понадобятся установленные Docker и Docker Compose.
 
-All necessary configuration parameters are defined as environment variables within `docker-compose.yml` with sensible default values. An optional `.env` file can be used to override these defaults for local development.
+Все необходимые параметры конфигурации определены как переменные окружения в `docker-compose.yml` со значениями по умолчанию. Опциональный файл `.env` можно использовать для переопределения этих значений при локальной разработке.
 
-1.  **Start the application:**
+1.  **Запуск приложения:**
 
     ```bash
     docker-compose up -d
     ```
 
-    This command will build the `job-website-backend:latest` image (if not already built) and start all defined services (database, cache, and the application).
+    Эта команда соберет образ `job-website-backend:latest` (если он еще не собран) и запустит все определенные сервисы (базу данных, кэш и приложение).
 
-2.  **Access the API:**
+2.  **Доступ к API:**
 
-    The API is documented using Swagger. You can access the Swagger UI at `http://localhost:8080/swagger/index.html`.
+    API задокументировано с помощью Swagger. Вы можете получить доступ к Swagger UI по адресу `http://localhost:8080/swagger/index.html`.
 
-    Key API Endpoints:
-    *   `GET /api/v1/vacancies`: Get a list of active vacancies.
-    *   `GET /api/v1/vacancies/{id}`: Get a vacancy by ID.
-    *   `GET /api/v1/vacancies/{id}/form`: Get the application form for a vacancy.
-    *   `POST /api/v1/applications`: Create a new application.
-    *   `GET /api/v1/departments`: Get a list of departments.
-    *   `GET /api/v1/levels`: Get a list of levels.
-    *   `GET /api/v1/locations`: Get a list of locations.
+    Ключевые эндпоинты API:
+    *   `GET /api/v1/vacancies`: Получить список активных вакансий.
+    *   `GET /api/v1/vacancies/{id}`: Получить вакансию по ID.
+    *   `GET /api/v1/vacancies/{id}/form`: Получить форму отклика на вакансию.
+    *   `POST /api/v1/applications`: Создать новый отклик.
+    *   `GET /api/v1/departments`: Получить список отделов.
+    *   `GET /api/v1/levels`: Получить список уровней.
+    *   `GET /api/v1/locations`: Получить список локаций.
 
-    Admin Endpoints (require authentication):
-    *   `GET /api/v1/admin/vacancies`: Get a list of all vacancies.
-    *   `POST /api/v1/admin/vacancies`: Create a new vacancy.
-    *   `PATCH /api/v1/admin/vacancies/{id}`: Update a vacancy.
-    *   `DELETE /api/v1/admin/vacancies/{id}`: Delete a vacancy.
-    *   `GET /api/v1/admin/applications`: Get a list of all applications.
-    *   `PATCH /api/v1/admin/applications/{id}`: Update an application.
-    *   `DELETE /api/v1/admin/applications/{id}`: Delete an application.
+    Эндпоинты администратора (требуют аутентификации):
+    *   `GET /api/v1/admin/vacancies`: Получить список всех вакансий.
+    *   `POST /api/v1/admin/vacancies`: Создать новую вакансию.
+    *   `PATCH /api/v1/admin/vacancies/{id}`: Обновить вакансию.
+    *   `DELETE /api/v1/admin/vacancies/{id}`: Удалить вакансию.
+    *   `GET /api/v1/admin/applications`: Получить список всех откликов.
+    *   `PATCH /api/v1/admin/applications/{id}`: Обновить отклик.
+    *   `DELETE /api/v1/admin/applications/{id}`: Удалить отклик.
 
-## Development Conventions
+## Соглашения по разработке
 
-*   **Testing:** To run the Go tests, use the command:
+*   **Тестирование:** Для запуска тестов Go используйте команду:
     ```bash
     go test ./...
     ```
-*   **Configuration:** Configuration is managed exclusively through environment variables. The application uses `viper` to load these variables, with explicit binding for robustness. Default values are provided in `docker-compose.yml`, which can be overridden by a local `.env` file.
-*   **Database Migrations:** The project uses Goose for database migrations. Migrations are automatically run on application startup.
-*   **UUID Support:** PostgreSQL UUID support is enabled via the `uuid-ossp` extension, which is configured in `scripts/init_dev.sql` for development environments.
+*   **Конфигурация:** Конфигурация управляется исключительно через переменные окружения. Приложение использует `viper` для загрузки этих переменных с явной привязкой для надежности. Значения по умолчанию указаны в `docker-compose.yml` и могут быть переопределены локальным файлом `.env`.
+*   **Миграции базы данных:** Проект использует Goose для миграций базы данных. Миграции автоматически применяются при запуске приложения.
+*   **Поддержка UUID:** Поддержка UUID в PostgreSQL включена через расширение `uuid-ossp`, которое настраивается в `scripts/init_dev.sql` для окружения разработки.
 
-## Authentication and Authorization
+## Аутентификация и авторизация
 
-The application integrates with an external AuthService for authentication and authorization.
+Приложение интегрируется с внешним сервисом аутентификации (AuthService) для аутентификации и авторизации.
 
-*   **Public Key Validation:** The service fetches the public key from the AuthService to validate JWT tokens. This key is periodically refreshed.
-*   **Blacklist Check:** JWT tokens are checked against a blacklist maintained by the AuthService. The blacklist is also periodically refreshed.
-*   **Permissions:** User permissions are fetched from the AuthService and cached for 24 hours to reduce load on the AuthService.
-*   **API Token:** The service uses its own API token to communicate with the AuthService for administrative tasks (e.g., fetching permissions).
+*   **Проверка публичного ключа:** Сервис получает публичный ключ от AuthService для проверки JWT-токенов. Этот ключ периодически обновляется.
+*   **Проверка по черному списку:** JWT-токены проверяются по черному списку, который ведется в AuthService. Черный список также периодически обновляется.
+*   **Права доступа:** Права пользователя запрашиваются у AuthService и кэшируются на 24 часа для снижения нагрузки на AuthService.
+*   **API-токен:** Сервис использует собственный API-токен для взаимодействия с AuthService при выполнении административных задач (например, получение прав доступа).
 
-## Example cURL Commands
+## Примеры cURL-команд
 
-### Public Endpoints
+### Публичные эндпоинты
 
-**Get all vacancies:**
+**Получить все вакансии:**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/vacancies"
 ```
 
-**Get important vacancies:**
+**Получить важные вакансии:**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/vacancies?important=true"
 ```
 
-**Search vacancies by name (e.g., "Engineer"):**
+**Поиск вакансий по названию (например, "Engineer"):**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/vacancies?search=Engineer"
 ```
 
-**Get a vacancy by ID (replace with actual ID):**
+**Получить вакансию по ID (замените на реальный ID):**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/vacancies/YOUR_VACANCY_ID"
 ```
 
-**Get application form for a vacancy (replace with actual ID):**
+**Получить форму отклика на вакансию (замените на реальный ID):**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/vacancies/YOUR_VACANCY_ID/form"
 ```
 
-**Create a new application:**
+**Создать новый отклик:**
 ```bash
 curl -X POST "http://localhost:8080/api/v1/applications" \
      -H "Content-Type: application/json" \
@@ -100,36 +100,36 @@ curl -X POST "http://localhost:8080/api/v1/applications" \
          }'
 ```
 
-**Get all departments:**
+**Получить все отделы:**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/departments"
 ```
 
-**Get all levels:**
+**Получить все уровни:**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/levels"
 ```
 
-**Get all locations:**
+**Получить все локации:**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/locations"
 ```
 
-### Admin Endpoints (requires Authorization header with JWT token)
+### Эндпоинты администратора (требуется заголовок Authorization с JWT-токеном)
 
-**Get all admin vacancies:**
+**Получить все вакансии администратора:**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/admin/vacancies" \
      -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-**Get all admin applications:**
+**Получить все отклики администратора:**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/admin/applications" \
      -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
-**Search admin applications by FIO (e.g., "John Doe"):**
+**Поиск откликов администратора по ФИО (например, "John Doe"):**
 ```bash
 curl -X GET "http://localhost:8080/api/v1/admin/applications?search=John%20Doe" \
      -H "Authorization: Bearer YOUR_JWT_TOKEN"
