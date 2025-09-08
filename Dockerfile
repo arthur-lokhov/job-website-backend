@@ -1,7 +1,7 @@
 # ===============================================================
 # Стадия 1: Сборка приложения
 # ===============================================================
-FROM golang:1.22-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
@@ -10,21 +10,20 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/server ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/server ./cmd/app
 
 # ===============================================================
 # Стадия 2: Создание минимального исполняемого образа
 # ===============================================================
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates tini
+RUN apk --no-cache add ca-certificates tini curl
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
 COPY --from=builder /app/server .
-COPY config ./config
 COPY migrations ./migrations
 
 RUN chown -R appuser:appgroup /app

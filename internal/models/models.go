@@ -1,22 +1,24 @@
+// Package models contains the data models for the application.
 package models
 
 import (
-	"github.com/google/uuid"
+	"encoding/json"
 	"time"
-	"gorm.io/datatypes"
+
+	"github.com/google/uuid"
 )
 
 type Vacancy struct {
-	ID              uuid.UUID      `gorm:"type:uuid;primaryKey"`
+	ID              uuid.UUID
 	Name            string
 	DepartmentID    uuid.UUID
-	Department      Department
+	DepartmentName  string // Populated from cache
 	LevelID         uuid.UUID
 	Level           Level
 	LocationID      uuid.UUID
 	Location        Location
-	Info            string         // markdown
-	ApplicationForm datatypes.JSON
+	Info            string // markdown
+	ApplicationForm json.RawMessage
 	IsActive        bool
 	Important       bool
 	Priority        int
@@ -25,10 +27,10 @@ type Vacancy struct {
 }
 
 type Application struct {
-	ID         uuid.UUID      `gorm:"type:uuid;primaryKey"`
+	ID         uuid.UUID
 	VacancyID  uuid.UUID
 	Vacancy    Vacancy
-	Answer     datatypes.JSON
+	Answer     json.RawMessage
 	Status     string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
@@ -36,12 +38,11 @@ type Application struct {
 }
 
 type Department struct {
-	ID   uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Name string
+	ID uuid.UUID
 }
 
 type Level struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
+	ID        uuid.UUID
 	Name      string
 	Priority  int
 	CreatedAt time.Time
@@ -49,19 +50,9 @@ type Level struct {
 }
 
 type Location struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
+	ID        uuid.UUID
 	Name      string
 	Priority  int
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
-
-type AuthService struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Name      string
-	Slug      string
-	LogoUrl   string
-	PhotoUrl  string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-} 

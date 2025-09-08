@@ -1,3 +1,4 @@
+-- +goose Up
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE departments (
@@ -55,4 +56,13 @@ CREATE TABLE auth_services (
     photo_url TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT now(),
     updated_at TIMESTAMP NOT NULL DEFAULT now()
-); 
+);
+
+-- +goose Down
+DROP TABLE auth_services;
+DROP TABLE applications;
+DROP TYPE application_status;
+DROP TABLE vacancies;
+DROP TABLE locations;
+DROP TABLE levels;
+DROP TABLE departments; 

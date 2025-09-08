@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "error": "connect ENOENT /var/run/docker.sock",
+  "path": "job-website-backend:latest"
+}

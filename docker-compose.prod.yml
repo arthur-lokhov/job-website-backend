@@ -26,22 +26,22 @@ services:
     networks:
       - backend
   app:
-    image: job-website-backend:latest
+    image: job-website-backend:${APP_IMAGE_TAG:-latest} # Use variable for image tag
     depends_on:
       db:
         condition: service_healthy
       cache:
         condition: service_healthy
     environment:
-      # Важно: собираем DB_URL, как того ожидает Go приложение
       - DB_URL=postgres://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@db:5432/${POSTGRES_DB:-jobdb}?sslmode=disable
       - AUTH_URL=${AUTH_URL:-https://authservice.cyberzone.dev}
-      - AUTH_API_TOKEN=${AUTH_API_TOKEN:-your_auth_api_token_here} # Add this line
-      # Передаем REDIS_URL напрямую
+      - AUTH_API_TOKEN=${AUTH_API_TOKEN:-your_auth_api_token_here}
       - REDIS_URL=${REDIS_URL:-redis://cache:6379/0}
       - HTTP_SERVER_PORT=${HTTP_SERVER_PORT:-:8080}
       - HTTP_SERVER_TIMEOUT=${HTTP_SERVER_TIMEOUT:-4s}
       - HTTP_SERVER_SHUTDOWN_TIMEOUT=${HTTP_SERVER_SHUTDOWN_TIMEOUT:-5s}
+    ports:
+      - "8080:8080" # Expose port 8080
     restart: unless-stopped
     networks:
       - backend

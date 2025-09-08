@@ -1,0 +1,885 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a sample server for a job website.",
+        "title": "Job Website API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/admin/applications": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of all applications",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get a list of all applications",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "filter by vacancy ID",
+                        "name": "vacancyId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "search by applicant's full name",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.ApplicationItem"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/applications/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete an application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete an application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update an application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Update an application",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Application ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Application status",
+                        "name": "status",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.ApplicationStatusUpdate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/vacancies": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get a list of all vacancies",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get a list of all vacancies",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "filter by active vacancies",
+                        "name": "isActive",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.AdminVacancyItem"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Create a new vacancy",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Create a new vacancy",
+                "parameters": [
+                    {
+                        "description": "Vacancy data",
+                        "name": "vacancy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.VacancyCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CreatedResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/vacancies/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Delete a vacancy",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Delete a vacancy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vacancy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update a vacancy",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Update a vacancy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vacancy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Vacancy data",
+                        "name": "vacancy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.VacancyUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/applications": {
+            "post": {
+                "description": "Create a new application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "applications"
+                ],
+                "summary": "Create a new application",
+                "parameters": [
+                    {
+                        "description": "Application data",
+                        "name": "application",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.ApplicationSubmitRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.SuccessResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/departments": {
+            "get": {
+                "description": "Get a list of departments",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "departments"
+                ],
+                "summary": "Get a list of departments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.DepartmentResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/levels": {
+            "get": {
+                "description": "Get a list of levels",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "levels"
+                ],
+                "summary": "Get a list of levels",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.LevelResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/locations": {
+            "get": {
+                "description": "Get a list of locations",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "locations"
+                ],
+                "summary": "Get a list of locations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.LocationResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vacancies": {
+            "get": {
+                "description": "Get a list of active vacancies",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancies"
+                ],
+                "summary": "Get a list of active vacancies",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "filter by important vacancies",
+                        "name": "important",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "sort by priority (asc/desc)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "search by vacancy name",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.PublicVacancyItem"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/vacancies/{id}": {
+            "get": {
+                "description": "Get a vacancy by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancies"
+                ],
+                "summary": "Get a vacancy by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vacancy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.PublicVacancyDetails"
+                        }
+                    }
+                }
+            }
+        },
+        "/vacancies/{id}/form": {
+            "get": {
+                "description": "Get the application form for a vacancy",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "vacancies"
+                ],
+                "summary": "Get the application form for a vacancy",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Vacancy ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ApplicationFormDTO"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "v1.AdminVacancyItem": {
+            "type": "object",
+            "properties": {
+                "applicationForm": {
+                    "$ref": "#/definitions/v1.ApplicationFormDTO"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "department": {
+                    "$ref": "#/definitions/v1.DepartmentDTO"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "important": {
+                    "type": "boolean"
+                },
+                "info": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "level": {
+                    "$ref": "#/definitions/v1.LevelDTO"
+                },
+                "location": {
+                    "$ref": "#/definitions/v1.LocationDTO"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.ApplicationFormDTO": {
+            "type": "object",
+            "properties": {
+                "formSchema": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "v1.ApplicationItem": {
+            "type": "object",
+            "properties": {
+                "answeredAt": {
+                    "type": "string"
+                },
+                "answers": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "vacancyId": {
+                    "type": "string"
+                },
+                "vacancyName": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.ApplicationStatusUpdate": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "PENDING",
+                        "VIEWED",
+                        "INPROGRESS",
+                        "APPROVED",
+                        "REJECTED"
+                    ]
+                }
+            }
+        },
+        "v1.ApplicationSubmitRequest": {
+            "type": "object",
+            "required": [
+                "answers",
+                "vacancyId"
+            ],
+            "properties": {
+                "answers": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "vacancyId": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.CreatedResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "v1.DepartmentDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.DepartmentResponse": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.LevelDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.LevelResponse": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.LocationDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.LocationResponse": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.PublicVacancyDetails": {
+            "type": "object",
+            "properties": {
+                "department": {
+                    "$ref": "#/definitions/v1.DepartmentDTO"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "important": {
+                    "type": "boolean"
+                },
+                "info": {
+                    "type": "string"
+                },
+                "level": {
+                    "$ref": "#/definitions/v1.LevelDTO"
+                },
+                "location": {
+                    "$ref": "#/definitions/v1.LocationDTO"
+                },
+                "logoUrl": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "photoUrl": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1.PublicVacancyItem": {
+            "type": "object",
+            "properties": {
+                "department": {
+                    "$ref": "#/definitions/v1.DepartmentDTO"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "important": {
+                    "type": "boolean"
+                },
+                "level": {
+                    "$ref": "#/definitions/v1.LevelDTO"
+                },
+                "location": {
+                    "$ref": "#/definitions/v1.LocationDTO"
+                },
+                "logoUrl": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1.SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "v1.VacancyCreateRequest": {
+            "type": "object",
+            "required": [
+                "applicationForm",
+                "departmentId",
+                "info",
+                "levelId",
+                "locationId",
+                "name"
+            ],
+            "properties": {
+                "applicationForm": {
+                    "$ref": "#/definitions/v1.ApplicationFormDTO"
+                },
+                "departmentId": {
+                    "type": "string"
+                },
+                "important": {
+                    "type": "boolean"
+                },
+                "info": {
+                    "type": "string",
+                    "minLength": 10
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "levelId": {
+                    "type": "string"
+                },
+                "locationId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3
+                },
+                "priority": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "v1.VacancyUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "applicationForm": {
+                    "$ref": "#/definitions/v1.ApplicationFormDTO"
+                },
+                "departmentId": {
+                    "type": "string"
+                },
+                "important": {
+                    "type": "boolean"
+                },
+                "info": {
+                    "type": "string",
+                    "minLength": 10
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "levelId": {
+                    "type": "string"
+                },
+                "locationId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3
+                },
+                "priority": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}
